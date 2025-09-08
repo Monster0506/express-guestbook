@@ -1,0 +1,38 @@
+<section>
+  <h2>Guestbook</h2>
+  <p>
+    Leave a message below! Entries are stored on the server and will
+    appear for everyone who visits this page.
+  </p>
+
+  <form method="post" action="/addEntry" class="guestbook-form">
+    <input
+      type="text"
+      placeholder="Write your name..."
+      name="nameText"
+      required
+    />
+    <input
+      type="text"
+      placeholder="Write a message..."
+      name="entryText"
+      required
+    />
+    <button type="submit">Add Guestbook Entry</button>
+  </form>
+</section>
+
+<section>
+  <h3>Entries</h3>
+
+  {{#if entries}}
+    <ul class="guestbook-entries">
+      {{#each entries}}
+        <li><span style="color:red">{{this.name}}</span> <span style="color:blue">{{this.text}}</span></li>
+        
+      {{/each}}
+    </ul>
+  {{else}}
+    <p>No entries yet. Be the first to sign the guestbook!</p>
+  {{/if}}
+</section>

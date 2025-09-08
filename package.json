@@ -1,0 +1,10 @@
+{
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^5.1.0",
+        "express-handlebars": "^8.0.1",
+        "jsonfile": "^6.2.0"
+    }
+}
