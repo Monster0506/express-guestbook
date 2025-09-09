@@ -19,44 +19,65 @@ const USE_KV = process.env.ON_VERCEL === "true";
 async function loadEntries() {
   if (USE_KV) {
     try {
+      // Check if KV is properly configured
+      if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+        console.warn("KV environment variables not set, falling back to local file");
+        return loadFromFile();
+      }
       const data = await kv.get(KV_KEY);
       return Array.isArray(data) ? data : [];
     } catch (err) {
       console.error("Error loading from KV:", err);
-      return [];
+      console.warn("Falling back to local file storage");
+      return loadFromFile();
     }
   } else {
-    if (fs.existsSync(DATA_FILE)) {
-      try {
-        const data = fs.readFileSync(DATA_FILE, "utf-8");
-        const entries = JSON.parse(data);
-        if (!Array.isArray(entries)) return [];
-        // Normalize historical entries
-        return entries.map((entry) => {
-          const timestamp = typeof entry.timestamp === "number" ? entry.timestamp : Date.now();
-          const id = entry.id || `${timestamp}-${Math.random().toString(36).slice(2, 8)}`;
-          const likes = typeof entry.likes === "number" ? entry.likes : 0;
-          return { id, name: entry.name, text: entry.text, timestamp, likes, owner: entry.owner };
-        });
-      } catch (err) {
-        console.error("Error reading guestbook.json:", err);
-        return [];
-      }
-    }
-    return [];
+    return loadFromFile();
   }
+}
+
+function loadFromFile() {
+  if (fs.existsSync(DATA_FILE)) {
+    try {
+      const data = fs.readFileSync(DATA_FILE, "utf-8");
+      const entries = JSON.parse(data);
+      if (!Array.isArray(entries)) return [];
+      // Normalize historical entries
+      return entries.map((entry) => {
+        const timestamp = typeof entry.timestamp === "number" ? entry.timestamp : Date.now();
+        const id = entry.id || `${timestamp}-${Math.random().toString(36).slice(2, 8)}`;
+        const likes = typeof entry.likes === "number" ? entry.likes : 0;
+        return { id, name: entry.name, text: entry.text, timestamp, likes, owner: entry.owner };
+      });
+    } catch (err) {
+      console.error("Error reading guestbook.json:", err);
+      return [];
+    }
+  }
+  return [];
 }
 
 async function saveEntries(entries) {
   if (USE_KV) {
     try {
+      // Check if KV is properly configured
+      if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+        console.warn("KV environment variables not set, falling back to local file");
+        return saveToFile(entries);
+      }
       await kv.set(KV_KEY, entries);
     } catch (err) {
       console.error("Error saving to KV:", err);
+      console.warn("Falling back to local file storage");
+      return saveToFile(entries);
     }
   } else {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(entries, null, 2));
+    return saveToFile(entries);
   }
+}
+
+function saveToFile(entries) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(entries, null, 2));
 }
 
 // Initialize entries
