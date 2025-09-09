@@ -1,6 +1,7 @@
 const express = require("express");
 const { engine } = require("express-handlebars");
 const fs = require("fs");
+const { kv } = require("@vercel/kv");
 
 const app = express();
 
@@ -11,31 +12,63 @@ app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
 const DATA_FILE = "guestbook.json";
+const KV_KEY = "guestbook:entries";
+const USE_KV = process.env.ON_VERCEL === "true";
 
-let guestbookEntries = [];
-if (fs.existsSync(DATA_FILE)) {
-  try {
-    const data = fs.readFileSync(DATA_FILE, "utf-8");
-    guestbookEntries = JSON.parse(data);
-    if (!Array.isArray(guestbookEntries)) {
-      guestbookEntries = [];
+// Storage wrapper functions
+async function loadEntries() {
+  if (USE_KV) {
+    try {
+      const data = await kv.get(KV_KEY);
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error("Error loading from KV:", err);
+      return [];
     }
-    // Normalize historical entries to include id/timestamp/likes
-    guestbookEntries = guestbookEntries.map((entry) => {
-      const timestamp = typeof entry.timestamp === "number" ? entry.timestamp : Date.now();
-      const id = entry.id || `${timestamp}-${Math.random().toString(36).slice(2, 8)}`;
-      const likes = typeof entry.likes === "number" ? entry.likes : 0;
-      return { id, name: entry.name, text: entry.text, timestamp, likes };
-    });
-  } catch (err) {
-    console.error("Error reading guestbook.json:", err);
-    guestbookEntries = [];
+  } else {
+    if (fs.existsSync(DATA_FILE)) {
+      try {
+        const data = fs.readFileSync(DATA_FILE, "utf-8");
+        const entries = JSON.parse(data);
+        if (!Array.isArray(entries)) return [];
+        // Normalize historical entries
+        return entries.map((entry) => {
+          const timestamp = typeof entry.timestamp === "number" ? entry.timestamp : Date.now();
+          const id = entry.id || `${timestamp}-${Math.random().toString(36).slice(2, 8)}`;
+          const likes = typeof entry.likes === "number" ? entry.likes : 0;
+          return { id, name: entry.name, text: entry.text, timestamp, likes, owner: entry.owner };
+        });
+      } catch (err) {
+        console.error("Error reading guestbook.json:", err);
+        return [];
+      }
+    }
+    return [];
   }
 }
 
-function saveEntries() {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(guestbookEntries, null, 2));
+async function saveEntries(entries) {
+  if (USE_KV) {
+    try {
+      await kv.set(KV_KEY, entries);
+    } catch (err) {
+      console.error("Error saving to KV:", err);
+    }
+  } else {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(entries, null, 2));
+  }
 }
+
+// Initialize entries
+let guestbookEntries = [];
+loadEntries().then(entries => {
+  guestbookEntries = entries;
+  console.log(`Loaded ${entries.length} entries from ${USE_KV ? 'Vercel KV' : 'local file'}`);
+}).catch(err => {
+  console.error("Failed to load entries:", err);
+  guestbookEntries = [];
+});
+
 
 function parseCookies(cookieHeader) {
   const cookies = {};
@@ -118,7 +151,7 @@ app.get("/source", (req, res) => {
   res.redirect("https://github.com/monster0506/express-guestbook/");
 });
 
-function receiveEntry(req, res) {
+async function receiveEntry(req, res) {
   const text = req.body.entryText?.trim();
   const name = req.body.nameText?.trim() || "Anonymous";
   const owner = getOrSetClientId(req, res);
@@ -145,45 +178,45 @@ function receiveEntry(req, res) {
   const data = { id, name, text: cleanText, timestamp, likes: 0, owner };
   if (cleanText) {
     guestbookEntries.push(data);
-    saveEntries();
+    await saveEntries(guestbookEntries);
   }
   res.redirect("/guestbook");
 }
 app.post("/addEntry", receiveEntry);
 
 // Like an entry
-app.post("/like/:id", (req, res) => {
+app.post("/like/:id", async (req, res) => {
   const { id } = req.params;
   const idx = guestbookEntries.findIndex((e) => e.id === id);
   if (idx !== -1) {
     guestbookEntries[idx].likes = (guestbookEntries[idx].likes || 0) + 1;
-    saveEntries();
+    await saveEntries(guestbookEntries);
   }
   const redirectTo = req.headers.referer?.includes("/guestbook") ? req.headers.referer : "/guestbook";
   res.redirect(redirectTo);
 });
 
 // Unlike an entry (toggle off)
-app.post("/unlike/:id", (req, res) => {
+app.post("/unlike/:id", async (req, res) => {
   const { id } = req.params;
   const idx = guestbookEntries.findIndex((e) => e.id === id);
   if (idx !== -1) {
     const current = guestbookEntries[idx].likes || 0;
     guestbookEntries[idx].likes = current > 0 ? current - 1 : 0;
-    saveEntries();
+    await saveEntries(guestbookEntries);
   }
   const redirectTo = req.headers.referer?.includes("/guestbook") ? req.headers.referer : "/guestbook";
   res.redirect(redirectTo);
 });
 
 // Delete an entry
-app.post("/delete/:id", (req, res) => {
+app.post("/delete/:id", async (req, res) => {
   const { id } = req.params;
   const clientId = getOrSetClientId(req, res);
   const before = guestbookEntries.length;
   guestbookEntries = guestbookEntries.filter((e) => !(e.id === id && e.owner === clientId));
   if (guestbookEntries.length !== before) {
-    saveEntries();
+    await saveEntries(guestbookEntries);
   }
   const redirectTo = req.headers.referer?.includes("/guestbook") ? req.headers.referer : "/guestbook";
   res.redirect(redirectTo);

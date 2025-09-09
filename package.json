@@ -3,6 +3,7 @@
         "start": "node server.js"
     },
     "dependencies": {
+        "@vercel/kv": "^1.0.1",
         "express": "^5.1.0",
         "express-handlebars": "^8.0.1",
         "jsonfile": "^6.2.0"
