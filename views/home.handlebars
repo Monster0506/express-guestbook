@@ -1,0 +1,41 @@
+<!-- Hero Section -->
+<section class="hero-section text-center mb-5">
+  <div class="hero-content">
+    <h1 class="hero-title">Welcome to the Guestbook</h1>
+    <p class="hero-subtitle">
+      Leave a message and see what others have shared. It only takes a moment!
+    </p>
+    <div class="hero-actions">
+      <a href="/guestbook" class="btn btn-primary btn-lg px-4">Open Guestbook</a>
+      <a href="/source" class="btn btn-outline-secondary btn-lg px-4">View Source</a>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+  <div class="row g-4">
+    <div class="col-12 col-md-6">
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3 class="feature-title">What is this?</h3>
+        <p class="feature-description">
+          A simple guestbook built with Express and Handlebars. Your entries are saved on the server and displayed for everyone to see.
+        </p>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">Live Stats</h3>
+        <div class="stats-content">
+          <div class="stat-item">
+            <span class="stat-number">{{totalEntries}}</span>
+            <span class="stat-label">Total Entries</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

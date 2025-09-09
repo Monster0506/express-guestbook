@@ -1,0 +1,255 @@
+:root {
+  --bg: #ffffff;
+  --fg: #0f172a;
+  --muted: #64748b;
+  --card: #ffffff;
+  --border: #e5e7eb;
+}
+
+body.dark {
+  --bg: #0b1220;
+  --fg: #e6eaf2;
+  --muted: #9aa5b1;
+  --card: #0f172a;
+  --border: #1f2937;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.bg-body-tertiary {
+  background: var(--card) !important;
+}
+
+.navbar,
+.card,
+.list-group-item {
+  background: var(--card);
+  border-color: var(--border) !important;
+}
+
+.text-secondary,
+.text-body-secondary {
+  color: var(--muted) !important;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  box-shadow: 0 2px 10px rgba(0, 102, 255, 0.15);
+}
+
+.card.shadow-sm,
+.list-group.shadow-sm {
+  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.06) !important;
+}
+
+.list-group-item {
+  border-left: none;
+  border-right: none;
+}
+
+.alert {
+  margin: 0;
+}
+/* Form label styling */
+.form-label {
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.2px;
+    margin-bottom: 0.35rem;
+  }
+  
+  /* Author name styling */
+  .author-name {
+    color: var(--fg);
+    font-weight: 700;
+    line-height: 1.25;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Subtle hover to indicate interactivity if needed later */
+  .list-group-item:hover .author-name {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  
+  /* Improve input focus visibility to match theme */
+  .form-control:focus {
+    border-color: rgba(0, 102, 255, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 255, 0.15);
+  }
+
+  /* Home Page Styles */
+  .hero-section {
+    padding: 4rem 0;
+    background: linear-gradient(135deg, var(--card) 0%, rgba(0, 102, 255, 0.05) 100%);
+    border-radius: 1rem;
+    margin-bottom: 3rem;
+  }
+
+  .hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--fg);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .hero-actions .btn {
+    min-width: 160px;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  .hero-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 102, 255, 0.25);
+  }
+
+  .features-section {
+    margin-top: 2rem;
+  }
+
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 2rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0066ff, #00ccff);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(2, 6, 23, 0.1);
+    border-color: rgba(0, 102, 255, 0.2);
+  }
+
+  .feature-card:hover::before {
+    opacity: 1;
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .feature-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: 1rem;
+  }
+
+  .feature-description {
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 0;
+  }
+
+  .stats-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .stat-number {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #0066ff;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.1rem;
+    }
+    
+    .hero-actions {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .hero-actions .btn {
+      width: 100%;
+      max-width: 280px;
+    }
+    
+    .feature-card {
+      padding: 1.5rem;
+    }
+    
+    .stat-number {
+      font-size: 2.5rem;
+    }
+  }

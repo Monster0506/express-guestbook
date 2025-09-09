@@ -1,38 +1,154 @@
-<section>
-  <h2>Guestbook</h2>
-  <p>
-    Leave a message below! Entries are stored on the server and will
-    appear for everyone who visits this page.
+<section class="mb-4">
+  <h2 class="h3 mb-3">Guestbook</h2>
+  <p class="text-secondary">
+    Leave a message below! Entries are stored on the server and will appear for everyone who visits this page.
   </p>
 
-  <form method="post" action="/addEntry" class="guestbook-form">
-    <input
-      type="text"
-      placeholder="Write your name..."
-      name="nameText"
-      required
-    />
-    <input
-      type="text"
-      placeholder="Write a message..."
-      name="entryText"
-      required
-    />
-    <button type="submit">Add Guestbook Entry</button>
-  </form>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="post" action="/addEntry" class="guestbook-form row g-3">
+        <div class="col-12 col-md-4">
+          <label for="nameText" class="form-label">Your name</label>
+          <input id="nameText" type="text" placeholder="Write your name..." name="nameText" class="form-control"
+            required />
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="entryText" class="form-label">Message</label>
+          <input id="entryText" type="text" placeholder="Write a message..." name="entryText" class="form-control"
+            required />
+        </div>
+        <div class="col-12 col-md-2 d-grid align-items-end">
+          <button type="submit" class="btn btn-primary mt-md-4">Add Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </section>
 
 <section>
-  <h3>Entries</h3>
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h3 class="h5 mb-0">Entries</h3>
+    <form method="get" action="/guestbook" class="d-flex align-items-center gap-2">
+      <input type="text" name="q" value="{{q}}" class="form-control form-control-sm" placeholder="Search" />
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="1" id="mineOnly" name="mine" {{#if mineOnly}}checked{{/if}}>
+        <label class="form-check-label" for="mineOnly">Your entries</label>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" type="submit">Apply</button>
+    </form>
+  </div>
 
   {{#if entries}}
-    <ul class="guestbook-entries">
-      {{#each entries}}
-        <li><span style="color:red">{{this.name}}</span> <span style="color:blue">{{this.text}}</span></li>
-        
-      {{/each}}
-    </ul>
+  <ul class="list-group list-group-flush rounded shadow-sm">
+    {{#each entries}}
+    <li class="list-group-item d-flex align-items-start gap-3" data-entry-id="{{this.id}}" data-can-delete="{{this.canDelete}}">
+      <div class="avatar text-bg-primary rounded-circle d-inline-flex align-items-center justify-content-center">
+        {{#if this.name}}
+        {{this.name.[0]}}
+        {{else}}
+        ?
+        {{/if}}
+      </div>
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <div>
+            <strong class="author-name me-2">{{this.name}}</strong>
+            {{#if this.canDelete}}
+              <span class="badge bg-primary-subtle text-primary border">You</span>
+            {{/if}}
+            <span class="badge bg-light text-secondary border">{{this.timeAgo}}</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <form method="post" action="/like/{{this.id}}" class="like-form" data-entry-id="{{this.id}}">
+              <button class="btn btn-sm btn-outline-primary like-button" type="submit">
+                ❤️ <span class="like-count">{{this.likes}}</span>
+              </button>
+            </form>
+            {{#if this.canDelete}}
+              <form method="post" action="/delete/{{this.id}}" onsubmit="return confirm('Delete this entry?');">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+              </form>
+            {{/if}}
+          </div>
+        </div>
+        <div class="text-body-secondary">{{this.text}}</div>
+      </div>
+    </li>
+    {{/each}}
+  </ul>
   {{else}}
-    <p>No entries yet. Be the first to sign the guestbook!</p>
+  <div class="alert alert-info" role="alert">
+    No entries yet. Be the first to sign the guestbook!
+  </div>
   {{/if}}
 </section>
+
+<script>
+  (function() {
+    const likeKey = 'liked-entries';
+    const ownKey = 'owned-entries';
+    const liked = new Set(JSON.parse(localStorage.getItem(likeKey) || '[]'));
+    const owned = new Set(JSON.parse(localStorage.getItem(ownKey) || '[]'));
+
+    function saveLikes() {
+      localStorage.setItem(likeKey, JSON.stringify(Array.from(liked)));
+    }
+
+    function saveOwned() {
+      localStorage.setItem(ownKey, JSON.stringify(Array.from(owned)));
+    }
+
+    function markLiked(button) {
+      button.classList.remove('btn-outline-primary');
+      button.classList.add('btn-primary');
+    }
+
+    function markUnliked(button) {
+      button.classList.remove('btn-primary');
+      button.classList.add('btn-outline-primary');
+    }
+
+    // Persist owned entries based on server-provided canDelete flag
+    document.querySelectorAll('[data-entry-id]').forEach(function(item){
+      const id = item.getAttribute('data-entry-id');
+      const can = item.getAttribute('data-can-delete');
+      if (can === 'true') {
+        owned.add(id);
+      }
+    });
+    saveOwned();
+
+    document.querySelectorAll('.like-form').forEach(function(form) {
+      const id = form.getAttribute('data-entry-id');
+      const btn = form.querySelector('.like-button');
+      const countEl = form.querySelector('.like-count');
+      if (liked.has(id)) {
+        markLiked(btn);
+      }
+      form.addEventListener('submit', function(e) {
+        // Toggle like/unlike by switching endpoint and local state
+        if (liked.has(id)) {
+          // Unlike
+          form.setAttribute('action', '/unlike/' + id);
+          liked.delete(id);
+          saveLikes();
+          if (countEl) {
+            const n = Math.max(0, (parseInt(countEl.textContent || '0', 10) - 1));
+            countEl.textContent = String(n);
+          }
+          markUnliked(btn);
+        } else {
+          // Like
+          form.setAttribute('action', '/like/' + id);
+          liked.add(id);
+          saveLikes();
+          if (countEl) {
+            const n = parseInt(countEl.textContent || '0', 10) + 1;
+            countEl.textContent = String(n);
+          }
+          markLiked(btn);
+        }
+      });
+    });
+  })();
+</script>
