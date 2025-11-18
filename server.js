@@ -1,7 +1,14 @@
 const express = require("express");
 const { engine } = require("express-handlebars");
 const fs = require("fs");
-const { kv } = require("@vercel/kv");
+const { createClient } = require("@vercel/kv");
+
+const kv = process.env.STORAGE_KV_REST_API_URL && process.env.STORAGE_KV_REST_API_TOKEN
+  ? createClient({
+      url: process.env.STORAGE_KV_REST_API_URL,
+      token: process.env.STORAGE_KV_REST_API_TOKEN,
+    })
+  : null;
 
 const app = express();
 
@@ -20,7 +27,7 @@ async function loadEntries() {
   if (USE_KV) {
     try {
       // Check if KV is properly configured
-      if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+      if (!kv) {
         console.warn("KV environment variables not set, falling back to local file");
         return loadFromFile();
       }
@@ -61,7 +68,7 @@ async function saveEntries(entries) {
   if (USE_KV) {
     try {
       // Check if KV is properly configured
-      if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+      if (!kv) {
         console.warn("KV environment variables not set, falling back to local file");
         return saveToFile(entries);
       }
