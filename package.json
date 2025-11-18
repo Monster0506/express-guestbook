@@ -3,6 +3,7 @@
         "start": "node server.js",
         "dev": "nodemon server.js"
     },
+    "dependencies": {
         "nodemon": "^3.1.11"
     }
 }
