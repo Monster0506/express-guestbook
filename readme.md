@@ -68,7 +68,7 @@ You want to make sure your `views` folder, `guestbook.json`, and `package.json` 
 Alright! Now setup is complete lets start using our express.js server!
 
 ##### Start
-currently, as advertised, this program does nothing. let's go to index.js and change that.
+currently, as advertised, this program does nothing. let's go to server.js and change that.
 
 ```js
 const express = require("express");
