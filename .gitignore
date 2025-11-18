@@ -1,2 +1,3 @@
 guestbook.json
 node_modules/
+.env
